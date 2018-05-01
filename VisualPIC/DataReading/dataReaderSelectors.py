@@ -20,11 +20,10 @@
 from VisualPIC.DataReading.rawDataReaders import *
 from VisualPIC.DataReading.fieldReaders import *
 
-
 class RawDataReaderSelector:
-    dataReaders = {"Osiris": OsirisRawDataReader
+    dataReaders = {"Osiris": OsirisRawDataReader,
+                   "openPMD": OpenPMDRawDataReader
                    #"HiPACE": HiPACERawDataReader,
-                   #"PIConGPU": PIConGPURawDataReader
                    }
     @classmethod
     def GetReader(cls, simulationCode, location, speciesName, dataName, internalName, firstTimeStep):
@@ -32,9 +31,9 @@ class RawDataReaderSelector:
 
 
 class FieldReaderSelector:
-    dataReaders = {"Osiris": OsirisFieldReader
+    dataReaders = {"Osiris": OsirisFieldReader,
+                   "openPMD": OpenPMDFieldReader
                    #"HiPACE": HiPACEFieldReader,
-                   #"PIConGPU": PIConGPUFieldReader
                    }
     @classmethod
     def GetReader(cls, simulationCode, location, speciesName, dataName, firstTimeStep):

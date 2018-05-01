@@ -24,6 +24,9 @@ import numpy as np
 
 from VisualPIC.DataReading.dataReader import DataReader
 
+# TODO: Add try/except statement for openPMD-viewer
+from opmd_viewer import OpenPMDTimeSeries
+
 
 class RawDataReaderBase(DataReader):
     """Parent class for all rawDataReaders"""
@@ -89,4 +92,38 @@ class OsirisRawDataReader(RawDataReaderBase):
         ending = ".h5"
         file_path = self.location + "/" + fileName + ending
         file_content = H5File(file_path, 'r')
+        return file_content
+
+
+class OpenPMDRawDataReader(RawDataReaderBase):
+    def __init__(self, location, speciesName, dataName, internalName, firstTimeStep):
+        # Store an openPMD timeseries object
+        # (Its API is used in order to conveniently extract data from the file)
+        self.openpmd_ts = OpenPMDTimeSeries( location, check_all_files=False )
+        # Initialize the instance
+        RawDataReaderBase.__init__(self, location, speciesName, dataName, internalName, firstTimeStep)
+
+    def _ReadData(self, timeStep):
+        data, = self.openpmd_ts.get_particle( [self.internalName],
+                    species=self.speciesName, iteration=timeStep )
+        self.currentTime = self._ReadTime(timeStep)
+        return data
+
+    def _ReadTime(self, timeStep):
+        # The line below sets the attribute `_current_i` of openpmd_ts
+        self.openpmd_ts._find_output( None, timeStep )
+        # This sets the corresponding time
+        self.currentTime = self.openpmd_ts.t[ self.openpmd_ts._current_i ]
+
+    def _ReadUnits(self):
+        # OpenPMD data always provide conversion to SI units
+        self.dataUnits = "" # TODO:
+        self.timeUnits = "s"
+
+    def _OpenFile(self, timeStep):
+        # The line below sets the attribute `_current_i` of openpmd_ts
+        self.openpmd_ts._find_output( None, timeStep )
+        # This finds the full path to the corresponding file
+        fileName = self.openpmd_ts.h5_files[ self.openpmd_ts._current_i ]
+        file_content = H5File(fileName, 'r')
         return file_content
